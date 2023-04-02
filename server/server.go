@@ -6,12 +6,32 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"shuvojit.in/asc/messaging"
+	"shuvojit.in/asc/messaging/kafka"
 )
 
 type Request struct {
     RequestTopic string `json:"requestTopic"`
     ResponseTopic string `json:"responseTopic"`
     Payload string `json:"payload"`
+}
+
+func requestResponseBlock(
+    requestTopic string,
+    responseTopic string,
+    payload string,
+) (string, error) {
+    brokers := []string{ "localhost:29092" }
+    var messagingProvider messaging.MessagingProvider
+    messagingProvider = &kafka.Kafka{
+        Brokers: brokers,
+    }
+    
+    if err := messagingProvider.Send("GGG1155", requestTopic, []byte("{}")); err != nil {
+        return "", errors.New("Could not send")
+    }
+
+    return "Kuch toh hua hai", nil
 }
 
 func handle(c *fiber.Ctx) error {
@@ -21,6 +41,11 @@ func handle(c *fiber.Ctx) error {
         return errors.New("Invalid request body")
     }
     log.Printf("Request: %v", request)
+    requestResponseBlock(
+        request.RequestTopic, 
+        request.ResponseTopic, 
+        request.Payload,
+    )
     c.Status(200).JSON(map[string]string{
         "message": "fetched successfully",
     })
