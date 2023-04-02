@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"shuvojit.in/asc/server"
+)
 
 func main() {
     fmt.Println("Hello, world!")
+    server.Start()
 }
