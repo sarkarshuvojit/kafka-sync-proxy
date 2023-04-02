@@ -44,8 +44,8 @@ func requestResponseBlock(
 }
 
 func handle(c *fiber.Ctx) error {
-    request := Request{}
-    if err := json.Unmarshal(c.Body(), &request); err != nil {
+    request := new(Request)
+    if err := c.BodyParser(request); err != nil {
         c.Status(400).JSON(map[string]string{})
         return errors.New("Invalid request body")
     }
