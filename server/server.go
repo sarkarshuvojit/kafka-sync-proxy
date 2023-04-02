@@ -26,12 +26,18 @@ func requestResponseBlock(
     messagingProvider = &kafka.Kafka{
         Brokers: brokers,
     }
+
+    key := "gg"
     
-    if err := messagingProvider.Send("GGG1155", requestTopic, []byte("{}")); err != nil {
+    if err := messagingProvider.Send(
+        key,
+        requestTopic, 
+        []byte(payload),); 
+        err != nil {
         return "", errors.New("Could not send")
     }
 
-    return "Kuch toh hua hai", nil
+    return "Fetched response ", nil
 }
 
 func handle(c *fiber.Ctx) error {
