@@ -5,4 +5,7 @@ default:
 	@echo "Cmds: [build | run]"
 
 build:
-	go build -o bin/asc-$(BRANCH)-$(HASH)
+	@go build -o bin/asc-$(BRANCH)-$(HASH)
+
+run:
+	@go run main.go
