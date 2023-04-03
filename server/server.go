@@ -29,16 +29,18 @@ func requestResponseBlock(
     var messagingProvider messaging.MessagingProvider
     messagingProvider = &kafka.Kafka{ Brokers: brokers }
 
-    key := createEventId()
+    // key := createEventId()
     
-    if err := messagingProvider.Send(
-        key,
+    msg, err := messagingProvider.SendAndReceive(
         requestTopic, 
-        []byte(payload),); 
-        err != nil {
-        return "", errors.New("Could not send")
+        responseTopic,
+        []byte(payload)); 
+
+    if err != nil {
+        log.Fatalln("Error Receiving msg")
     }
 
+    log.Println(msg)
     return "Fetched response ", nil
 }
 
