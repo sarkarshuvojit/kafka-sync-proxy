@@ -1,11 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"shuvojit.in/asc/messaging"
 	"shuvojit.in/asc/messaging/kafka"
 )
@@ -16,32 +16,29 @@ type Request struct {
     Payload string `json:"payload"`
 }
 
-func createEventId() string {
-    return uuid.NewString()
-}
 
 func requestResponseBlock(
     requestTopic string,
     responseTopic string,
     payload string,
-) (string, error) {
+) ([]byte, error) {
+
     brokers := []string{ "localhost:29092" }
+
     var messagingProvider messaging.MessagingProvider
     messagingProvider = &kafka.Kafka{ Brokers: brokers }
 
-    // key := createEventId()
-    
     msg, err := messagingProvider.SendAndReceive(
         requestTopic, 
         responseTopic,
         []byte(payload)); 
 
     if err != nil {
-        log.Fatalln("Error Receiving msg")
+        log.Println("Error Receiving msg")
+        return nil, err
     }
 
-    log.Println(msg)
-    return "Fetched response ", nil
+    return msg, nil
 }
 
 func handle(c *fiber.Ctx) error {
@@ -51,20 +48,26 @@ func handle(c *fiber.Ctx) error {
         return errors.New("Invalid request body")
     }
     log.Printf("Request: %v", request)
+
     res, err := requestResponseBlock(
         request.RequestTopic, 
         request.ResponseTopic, 
         request.Payload,
     )
+
     if err != nil {
-        c.Status(400).JSON(map[string]string{})
-        return errors.New("Did not get response")
+        return c.Status(400).JSON(map[string]string{
+            "error": err.Error(),
+        })
     }
-    c.Status(200).JSON(map[string]string{
+
+    var response interface{}
+    json.Unmarshal(res, &response)
+
+    return c.Status(200).JSON(map[string]interface{}{
         "message": "fetched successfully",
-        "response": res,
+        "response": response,
     })
-    return nil
 }
 
 func setupRoutes(app *fiber.App) {
