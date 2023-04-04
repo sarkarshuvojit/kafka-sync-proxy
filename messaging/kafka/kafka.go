@@ -46,84 +46,7 @@ func (k Kafka) getConsumer() (sarama.Consumer, error) {
     return conn, nil
 }
 
-func (k Kafka) SendAndReceive(
-    requestTopic string,
-    responseTopic string,
-    payload []byte,
-) ([]byte, error) {
-
-    coorelationId := k.createEventId()
-
-    if err := k.Send(coorelationId, requestTopic, []byte("{}")); err != nil {
-        log.Println("Error sending message")
-        return nil, err
-    }
-
-    worker, err := k.getConsumer()
-    if err != nil {
-        log.Println("Could not create consumer")
-        return nil, err
-    }
-    defer worker.Close()
-
-    consumer, err := worker.ConsumePartition(requestTopic, 0, sarama.OffsetOldest)
-	if err != nil {
-		log.Println("Cound not start consumer")
-        return nil, err
-	}
-
-    sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-
-	// Count how many message processed
-	msgCount := 0
-
-    ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	// Get signal for finish
-	responseFoundCh := make(chan []byte)
-	responseFoundErrCh := make(chan error)
-
-	go func() {
-		for {
-			select {
-			case err := <-consumer.Errors():
-				fmt.Println(err)
-                responseFoundErrCh <- err
-
-			case msg := <-consumer.Messages():
-				msgCount++
-				fmt.Printf("Received message Count %d: | Topic(%s) | Message(%s) | Key(%s)\n", msgCount, string(msg.Topic), string(msg.Value), string(msg.Key))
-                if string(msg.Key) == coorelationId {
-                    fmt.Println("Found coorelationId")
-                    responseFoundCh <- msg.Value
-                }
-
-			case <-sigchan:
-				fmt.Println("Interrupt is detected")
-				responseFoundErrCh <- errors.New("Interruped")
-			}
-		}
-	}()
-
-    select {
-        case <- ctxTimeout.Done():
-            fmt.Printf("Context cancelled: %v\n", ctxTimeout.Err())
-            return nil, errors.New("Timeout error")
-
-        case err := <- responseFoundErrCh:
-            fmt.Println("Unkown error")
-            return nil, err
-
-        case response := <- responseFoundCh:
-            fmt.Println("Processed", msgCount, "messages")
-            return response, nil
-    }
-
-}
-
-func (k Kafka) Send(
+func (k Kafka) send(
     key string,
     requestTopic string,
     payload []byte,
@@ -148,69 +71,87 @@ func (k Kafka) Send(
     return nil
 }
 
-
-func (k Kafka) _SendAndReceive(
-    requestTopic string,
-    responseTopic string,
-    payload []byte,
+func (k Kafka) receive(
+    topic string,
+    coorelationId string,
+    timeoutInSeconds int,
 ) ([]byte, error) {
-    log.Println("Send&Receive")
-
-    coorelationId := k.createEventId()
-
-    if err := k.Send(coorelationId, responseTopic, []byte("{}")); err != nil {
-        log.Fatalln("Error sending message")
-    }
-
     worker, err := k.getConsumer()
     if err != nil {
-        log.Fatalln("Could not create consumer")
+        log.Println("Could not create consumer")
+        return nil, err
     }
+    defer worker.Close()
 
-    consumer, err := worker.ConsumePartition(requestTopic, 0, sarama.OffsetOldest)
+    consumer, err := worker.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
-		panic(err)
+		log.Println("Cound not start consumer")
+        return nil, err
 	}
+
     sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	// Count how many message processed
-	msgCount := 0
 
-    ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*3)
+    ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutInSeconds))
 	defer cancel()
 
 	// Get signal for finish
-	doneCh := make(chan bool)
+	responseFoundCh := make(chan []byte)
+	responseFoundErrCh := make(chan error)
+
 	go func() {
 		for {
 			select {
 			case err := <-consumer.Errors():
 				fmt.Println(err)
+                responseFoundErrCh <- err
+
 			case msg := <-consumer.Messages():
-				msgCount++
-				fmt.Printf("Received message Count %d: | Topic(%s) | Message(%s) | Key(%s)\n", msgCount, string(msg.Topic), string(msg.Value), string(msg.Key))
                 if string(msg.Key) == coorelationId {
                     fmt.Println("Found coorelationId")
-                    doneCh <- true
+                    responseFoundCh <- msg.Value
                 }
+
 			case <-sigchan:
 				fmt.Println("Interrupt is detected")
-				doneCh <- true
+				responseFoundErrCh <- errors.New("Interruped")
 			}
 		}
 	}()
 
     select {
-        case <-ctxTimeout.Done():
+        case <- ctxTimeout.Done():
             fmt.Printf("Context cancelled: %v\n", ctxTimeout.Err())
-            return nil, errors.New("Did not receive")
-        case <-doneCh:
-            fmt.Println("Processed", msgCount, "messages")
+            return nil, errors.New("Timeout error")
+
+        case err := <- responseFoundErrCh:
+            fmt.Println("Unkown error")
+            return nil, err
+
+        case response := <- responseFoundCh:
+            return response, nil
     }
 
-	if err := worker.Close(); err != nil {
-		panic(err)
-	}
-
-    return []byte(""), nil
 }
+
+func (k Kafka) SendAndReceive(
+    requestTopic string,
+    responseTopic string,
+    payload []byte,
+) ([]byte, error) {
+
+    coorelationId := k.createEventId()
+
+    if err := k.send(coorelationId, requestTopic, []byte("{}")); err != nil {
+        log.Println("Error sending message")
+        return nil, err
+    }
+
+    res, err := k.receive(responseTopic, coorelationId, 5)
+    if err != nil {
+        return nil, err
+    }
+
+    return res, nil
+}
+
