@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"shuvojit.in/asc/service"
 	"shuvojit.in/asc/types"
 )

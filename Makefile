@@ -4,6 +4,9 @@ HASH := $(shell git rev-parse --short HEAD)
 default:
 	@echo "Cmds: [build | run]"
 
+test:
+	@go test ./...
+
 build:
 	@go build -o bin/asc-$(BRANCH)-$(HASH)
 

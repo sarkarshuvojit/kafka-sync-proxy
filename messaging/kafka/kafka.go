@@ -53,7 +53,7 @@ func (k Kafka) send(
 ) error {
 	producer, err := k.getProducer()
 	if err != nil {
-		log.Println("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return errors.New(fmt.Sprintf("Could not produce to %v", k.Brokers))
 	}
 	partition, offset, err := producer.SendMessage(&sarama.ProducerMessage{
@@ -63,7 +63,7 @@ func (k Kafka) send(
 	})
 
 	if err != nil {
-		log.Println("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return errors.New(fmt.Sprintf("Could not produce to %v", k.Brokers))
 	}
 
