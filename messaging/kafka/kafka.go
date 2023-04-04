@@ -1,12 +1,14 @@
 package kafka
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
@@ -16,11 +18,11 @@ type Kafka struct {
     Brokers []string `json:"brokers"`
 }
 
-func createEventId() string {
+func (k Kafka) createEventId() string {
     return uuid.NewString()
 }
 
-func (k Kafka) GetProducer() (sarama.SyncProducer, error) {
+func (k Kafka) getProducer() (sarama.SyncProducer, error) {
     log.Printf("Getting Producer for %v", k.Brokers)
     config := sarama.NewConfig()
     config.Producer.Return.Successes = true
@@ -37,7 +39,7 @@ func (k Kafka) Send(
     requestTopic string,
     payload []byte,
 ) error {
-    producer, err := k.GetProducer()
+    producer, err := k.getProducer()
     if err != nil {
         log.Println("Error: %v", err)
         return errors.New(fmt.Sprintf("Could not produce to %v", k.Brokers))
@@ -76,7 +78,7 @@ func (k Kafka) SendAndReceive(
 ) ([]byte, error) {
     log.Println("Send&Receive")
 
-    coorelationId := createEventId()
+    coorelationId := k.createEventId()
 
     if err := k.Send(coorelationId, responseTopic, []byte("{}")); err != nil {
         log.Fatalln("Error sending message")
@@ -87,7 +89,7 @@ func (k Kafka) SendAndReceive(
         log.Fatalln("Could not create consumer")
     }
 
-    consumer, err := worker.ConsumePartition(responseTopic, 0, sarama.OffsetOldest)
+    consumer, err := worker.ConsumePartition(requestTopic, 0, sarama.OffsetOldest)
 	if err != nil {
 		panic(err)
 	}
@@ -96,8 +98,11 @@ func (k Kafka) SendAndReceive(
 	// Count how many message processed
 	msgCount := 0
 
+    ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
 	// Get signal for finish
-	doneCh := make(chan struct{})
+	doneCh := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -106,22 +111,24 @@ func (k Kafka) SendAndReceive(
 			case msg := <-consumer.Messages():
 				msgCount++
 				fmt.Printf("Received message Count %d: | Topic(%s) | Message(%s) | Key(%s)\n", msgCount, string(msg.Topic), string(msg.Value), string(msg.Key))
-                if msgCount > 5 {
-                    doneCh <- struct{}{}
-                }
                 if string(msg.Key) == coorelationId {
                     fmt.Println("Found coorelationId")
-                    doneCh <- struct{}{}
+                    doneCh <- true
                 }
 			case <-sigchan:
 				fmt.Println("Interrupt is detected")
-				doneCh <- struct{}{}
+				doneCh <- true
 			}
 		}
 	}()
 
-	<-doneCh
-	fmt.Println("Processed", msgCount, "messages")
+    select {
+        case <-ctxTimeout.Done():
+            fmt.Printf("Context cancelled: %v\n", ctxTimeout.Err())
+            return nil, errors.New("Did not receive")
+        case <-doneCh:
+            fmt.Println("Processed", msgCount, "messages")
+    }
 
 	if err := worker.Close(); err != nil {
 		panic(err)
