@@ -3,10 +3,11 @@ package service_test
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-
 func TestService(t *testing.T) {
-    //assert.Equal(t, "20", "30", "should be equal")
-    fmt.Println("Testing success")
+	assert.Equal(t, "", "")
+	fmt.Println("Testing success")
 }

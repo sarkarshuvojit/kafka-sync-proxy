@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"shuvojit.in/asc/messaging/kafka"
 	"shuvojit.in/asc/service"
 	"shuvojit.in/asc/types"
 )
@@ -18,7 +19,12 @@ func HandleRest(c *fiber.Ctx) error {
 	}
 	log.Printf("Request: %v", request)
 
-	res, err := service.RequestResponseBlock(
+	messagingProvider := &kafka.Kafka{Brokers: request.Brokers}
+	blockingService := &service.BlockingService{
+		Provider: messagingProvider,
+	}
+
+	res, err := blockingService.RequestResponseBlock(
 		request.RequestTopic,
 		request.ResponseTopic,
 		request.Payload,
@@ -37,4 +43,3 @@ func HandleRest(c *fiber.Ctx) error {
 		"response": response,
 	})
 }
-

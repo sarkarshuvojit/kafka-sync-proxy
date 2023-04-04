@@ -4,18 +4,19 @@ import (
 	"log"
 
 	"shuvojit.in/asc/messaging"
-	"shuvojit.in/asc/messaging/kafka"
 )
-func RequestResponseBlock(
+
+type BlockingService struct {
+	Provider messaging.MessagingProvider
+}
+
+func (b BlockingService) RequestResponseBlock(
 	requestTopic string,
 	responseTopic string,
 	payload string,
 ) ([]byte, error) {
 
-	brokers := []string{"localhost:29092"}
-
-	var messagingProvider messaging.MessagingProvider
-	messagingProvider = &kafka.Kafka{Brokers: brokers}
+	messagingProvider := b.Provider
 
 	msg, err := messagingProvider.SendAndReceive(
 		requestTopic,
