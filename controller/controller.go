@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging/kafka"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/service"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/types"
@@ -22,13 +23,19 @@ func HandleRest(c *fiber.Ctx) error {
 	messagingProvider := &kafka.Kafka{Brokers: request.Brokers, Timeout: 5}
 	blockingService := &service.BlockingService{Provider: messagingProvider}
 
+	payloadAsBytes, _ := json.Marshal(request.Payload)
+
 	res, err := blockingService.RequestResponseBlock(
 		request.RequestTopic,
 		request.ResponseTopic,
-		request.Payload,
+		string(payloadAsBytes),
 	)
 	if err != nil {
-		return c.Status(400).JSON(map[string]string{
+		status := 400
+		if err == messaging.TimeoutErr {
+			status = 408
+		}
+		return c.Status(status).JSON(map[string]string{
 			"error": err.Error(),
 		})
 	}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging"
 )
 
 type Kafka struct {
@@ -124,7 +125,7 @@ func (k Kafka) receive(
 	select {
 	case <-ctxTimeout.Done():
 		fmt.Printf("Context cancelled: %v\n", ctxTimeout.Err())
-		return nil, errors.New("Timeout error")
+		return nil, messaging.TimeoutErr
 
 	case err := <-responseFoundErrCh:
 		fmt.Println("Unkown error")
@@ -144,7 +145,7 @@ func (k Kafka) SendAndReceive(
 
 	coorelationId := k.createEventId()
 
-	if err := k.send(coorelationId, requestTopic, []byte("{}")); err != nil {
+	if err := k.send(coorelationId, requestTopic, payload); err != nil {
 		log.Println("Error sending message")
 		return nil, err
 	}
