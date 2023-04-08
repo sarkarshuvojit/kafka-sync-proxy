@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -52,16 +53,33 @@ func (k Kafka) send(
 	key string,
 	requestTopic string,
 	payload []byte,
+	headers []byte,
 ) error {
 	producer, err := k.getProducer()
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return errors.New(fmt.Sprintf("Could not produce to %v", k.Brokers))
 	}
+
+	var recordHeaders []sarama.RecordHeader
+	var headersMap map[string]string
+
+	if err := json.Unmarshal(headers, &headersMap); err != nil {
+		return err
+	}
+
+	for k, v := range headersMap {
+		recordHeaders = append(recordHeaders, sarama.RecordHeader{
+			Key:   []byte(k),
+			Value: []byte(v),
+		})
+	}
+
 	partition, offset, err := producer.SendMessage(&sarama.ProducerMessage{
-		Topic: requestTopic,
-		Value: sarama.StringEncoder(string(payload)),
-		Key:   sarama.StringEncoder(key),
+		Topic:   requestTopic,
+		Value:   sarama.StringEncoder(string(payload)),
+		Key:     sarama.StringEncoder(key),
+		Headers: recordHeaders,
 	})
 
 	if err != nil {
@@ -77,7 +95,7 @@ func (k Kafka) receive(
 	topic string,
 	coorelationId string,
 	timeoutInSeconds int,
-) ([]byte, error) {
+) (*messaging.SendAndReceiveResponse, error) {
 	worker, err := k.getConsumer()
 	if err != nil {
 		log.Println("Could not create consumer")
@@ -98,7 +116,7 @@ func (k Kafka) receive(
 	defer cancel()
 
 	// Get signal for finish
-	responseFoundCh := make(chan []byte)
+	responseFoundCh := make(chan *messaging.SendAndReceiveResponse)
 	responseFoundErrCh := make(chan error)
 
 	go func() {
@@ -112,7 +130,17 @@ func (k Kafka) receive(
 				if string(msg.Key) == coorelationId {
 					// Todo: Dynamically set logic for finding reuqest pairs
 					fmt.Println("Found coorelationId")
-					responseFoundCh <- msg.Value
+					headersMap := map[string]string{}
+					for _, recordHeader := range msg.Headers {
+						log.Printf("recordHeader: %s", recordHeader.Key)
+						log.Printf("recordHeader: %s", recordHeader.Value)
+						headersMap[string(recordHeader.Key)] = string(recordHeader.Value)
+					}
+					headersAsBytes, _ := json.Marshal(headersMap)
+					responseFoundCh <- &messaging.SendAndReceiveResponse{
+						Payload: msg.Value,
+						Headers: headersAsBytes,
+					}
 				}
 
 			case <-sigchan:
@@ -141,11 +169,12 @@ func (k Kafka) SendAndReceive(
 	requestTopic string,
 	responseTopic string,
 	payload []byte,
-) ([]byte, error) {
+	headers []byte,
+) (*messaging.SendAndReceiveResponse, error) {
 
 	coorelationId := k.createEventId()
 
-	if err := k.send(coorelationId, requestTopic, payload); err != nil {
+	if err := k.send(coorelationId, requestTopic, payload, headers); err != nil {
 		log.Println("Error sending message")
 		return nil, err
 	}

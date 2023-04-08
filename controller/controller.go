@@ -24,11 +24,13 @@ func HandleRest(c *fiber.Ctx) error {
 	blockingService := &service.BlockingService{Provider: messagingProvider}
 
 	payloadAsBytes, _ := json.Marshal(request.Payload)
+	headersAsBytes, _ := json.Marshal(request.Headers)
 
 	res, err := blockingService.RequestResponseBlock(
 		request.RequestTopic,
 		request.ResponseTopic,
 		string(payloadAsBytes),
+		string(headersAsBytes),
 	)
 	if err != nil {
 		status := 400
@@ -41,9 +43,13 @@ func HandleRest(c *fiber.Ctx) error {
 	}
 
 	var response interface{}
-	json.Unmarshal(res, &response)
+	json.Unmarshal(res.Payload, &response)
+
+	var headers interface{}
+	json.Unmarshal(res.Headers, &headers)
 
 	return c.Status(200).JSON(map[string]interface{}{
 		"response": response,
+		"headers":  headers,
 	})
 }

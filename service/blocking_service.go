@@ -14,14 +14,16 @@ func (b BlockingService) RequestResponseBlock(
 	requestTopic string,
 	responseTopic string,
 	payload string,
-) ([]byte, error) {
+	headers string,
+) (*messaging.SendAndReceiveResponse, error) {
 
 	messagingProvider := b.Provider
 
 	msg, err := messagingProvider.SendAndReceive(
 		requestTopic,
 		responseTopic,
-		[]byte(payload))
+		[]byte(payload),
+		[]byte(headers))
 
 	if err != nil {
 		log.Println("Error Receiving msg")
