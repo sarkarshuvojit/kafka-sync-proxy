@@ -12,3 +12,6 @@ build:
 
 run:
 	@air
+
+build-image:
+	@docker build -t sarkarshuvojit/kafka-sync-proxy:staging .

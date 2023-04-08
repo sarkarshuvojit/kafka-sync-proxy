@@ -13,5 +13,5 @@ func setupRoutes(app *fiber.App) {
 func Start() {
 	app := fiber.New()
 	setupRoutes(app)
-	app.Listen(":3000")
+	app.Listen(":8420")
 }
