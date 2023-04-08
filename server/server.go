@@ -2,11 +2,8 @@ package server
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"shuvojit.in/asc/controller"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/controller"
 )
-
-
-
 
 func setupRoutes(app *fiber.App) {
 	api := app.Group("/v1")

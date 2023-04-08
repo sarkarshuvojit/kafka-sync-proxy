@@ -8,7 +8,7 @@ test:
 	@go test ./...
 
 build:
-	@go build -o bin/asc-$(BRANCH)-$(HASH)
+	@go build -o bin/ksp-$(BRANCH)-$(HASH)
 
 run:
 	@air

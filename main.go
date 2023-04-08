@@ -1,7 +1,7 @@
 package main
 
 import (
-	"shuvojit.in/asc/server"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/server"
 )
 
 func main() {

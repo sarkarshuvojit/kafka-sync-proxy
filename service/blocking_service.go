@@ -3,7 +3,7 @@ package service
 import (
 	"log"
 
-	"shuvojit.in/asc/messaging"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging"
 )
 
 type BlockingService struct {

@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	"shuvojit.in/asc/messaging/kafka"
-	"shuvojit.in/asc/service"
-	"shuvojit.in/asc/types"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging/kafka"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/service"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/types"
 )
 
 func HandleRest(c *fiber.Ctx) error {
