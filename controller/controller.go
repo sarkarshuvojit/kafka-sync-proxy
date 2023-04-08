@@ -19,10 +19,8 @@ func HandleRest(c *fiber.Ctx) error {
 	}
 	log.Printf("Request: %v", request)
 
-	messagingProvider := &kafka.Kafka{Brokers: request.Brokers}
-	blockingService := &service.BlockingService{
-		Provider: messagingProvider,
-	}
+	messagingProvider := &kafka.Kafka{Brokers: request.Brokers, Timeout: 5}
+	blockingService := &service.BlockingService{Provider: messagingProvider}
 
 	res, err := blockingService.RequestResponseBlock(
 		request.RequestTopic,
@@ -39,7 +37,6 @@ func HandleRest(c *fiber.Ctx) error {
 	json.Unmarshal(res, &response)
 
 	return c.Status(200).JSON(map[string]interface{}{
-		"message":  "fetched successfully",
 		"response": response,
 	})
 }

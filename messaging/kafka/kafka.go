@@ -15,7 +15,8 @@ import (
 )
 
 type Kafka struct {
-	Brokers []string `json:"brokers"`
+	Brokers []string `json:"brokers,omitempty"`
+	Timeout int      `json:"timeout,omitempty"`
 }
 
 func (k Kafka) createEventId() string {
@@ -108,6 +109,7 @@ func (k Kafka) receive(
 
 			case msg := <-consumer.Messages():
 				if string(msg.Key) == coorelationId {
+					// Todo: Dynamically set logic for finding reuqest pairs
 					fmt.Println("Found coorelationId")
 					responseFoundCh <- msg.Value
 				}
@@ -147,7 +149,7 @@ func (k Kafka) SendAndReceive(
 		return nil, err
 	}
 
-	res, err := k.receive(responseTopic, coorelationId, 5)
+	res, err := k.receive(responseTopic, coorelationId, k.Timeout)
 	if err != nil {
 		return nil, err
 	}
