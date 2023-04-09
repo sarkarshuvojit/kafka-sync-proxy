@@ -2,6 +2,7 @@
 # Kafka Synchronous Proxy
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/sarkarshuvojit/kafka-sync-proxy.svg)](https://pkg.go.dev/github.com/sarkarshuvojit/kafka-sync-proxy)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/sarkarshuvojit/kafka-sync-proxy)
 
 A web service to make traditional rest api calls which publishes a messsage into a topic & wait for the response in a response channel.
 
