@@ -1,9 +1,10 @@
 
 # Kafka Synchronous Proxy
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/sarkarshuvojit/kafka-sync-proxy.svg)](https://pkg.go.dev/github.com/sarkarshuvojit/kafka-sync-proxy)
+
 A web service to make traditional rest api calls which publishes a messsage into a topic & wait for the response in a response channel.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/sarkarshuvojit/kafka-sync-proxy.svg)](https://pkg.go.dev/github.com/sarkarshuvojit/kafka-sync-proxy)
 
 ## How does it work?
 
