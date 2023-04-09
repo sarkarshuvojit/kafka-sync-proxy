@@ -112,8 +112,8 @@ Let's say you have a microservice listening to `com.org.events.testInitiated` wh
 $ curl --location --request POST 'http://localhost:8420/v1/' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "requestTopic": "com.org.events.testInitiated",
-    "responseTopic": "com.org.events.testCompleted",
+    "requestTopic": "testing.in",
+    "responseTopic": "testing.out",
     "payload": {
         "message": "testing the proxy",
         "nested": {
@@ -126,9 +126,30 @@ $ curl --location --request POST 'http://localhost:8420/v1/' \
         "customAuthHeader": "ggg"
     },
     "brokers": [
-        "kafka:9092"
+        "localhost:29092"
     ]
 }'
+```
+
+Should respond with:
+
+```json
+HTTP 200 OK
+
+{
+   "headers" : {
+      "customAuthHeader" : "ggg",
+      "newHeaderKey" : "header val"
+   },
+   "response" : {
+      "message" : "testing the proxy",
+      "nested" : {
+         "child" : {
+            "subChild" : 42
+         }
+      }
+   }
+}
 ```
 
 
