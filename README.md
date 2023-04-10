@@ -116,8 +116,8 @@ Let's say you have a microservice listening to `com.org.events.testInitiated` wh
 $ curl --location --request POST 'http://localhost:8420/v1/' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "requestTopic": "testing.in",
-    "responseTopic": "testing.out",
+    "requestTopic": "com.org.events.testInitiated",
+    "responseTopic": "com.org.events.testCompleted",
     "payload": {
         "message": "testing the proxy",
         "nested": {
