@@ -21,7 +21,9 @@ type Kafka struct {
 	Timeout int      `json:"timeout,omitempty"`
 }
 
-func NewKafka(brokers []string, timeout int) *Kafka {
+// Creates new KafkaProvider with a set of brokers and timeout
+// after which it will stop listening to the response channel
+func NewKafkaProvider(brokers []string, timeout int) *Kafka {
 	return &Kafka{
 		Brokers: brokers,
 		Timeout: timeout,

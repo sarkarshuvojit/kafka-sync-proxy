@@ -10,12 +10,16 @@ type BlockingService struct {
 	Provider messaging.MessagingProvider
 }
 
+// Creates new BlockingService with a messaging service provider
+// Which will be used as the transport protocol
 func NewBlockingService(provider messaging.MessagingProvider) *BlockingService {
 	return &BlockingService{
 		Provider: provider,
 	}
 }
 
+// This function pushes the payload and headers to requestTopic,
+// and waits for a message in responseTopic with the same key.
 func (b BlockingService) RequestResponseBlock(
 	requestTopic string,
 	responseTopic string,
