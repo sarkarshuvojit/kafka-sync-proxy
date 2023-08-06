@@ -10,6 +10,12 @@ type BlockingService struct {
 	Provider messaging.MessagingProvider
 }
 
+func NewBlockingService(provider messaging.MessagingProvider) *BlockingService {
+	return &BlockingService{
+		Provider: provider,
+	}
+}
+
 func (b BlockingService) RequestResponseBlock(
 	requestTopic string,
 	responseTopic string,

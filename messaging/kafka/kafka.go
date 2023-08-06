@@ -21,6 +21,13 @@ type Kafka struct {
 	Timeout int      `json:"timeout,omitempty"`
 }
 
+func NewKafka(brokers []string, timeout int) *Kafka {
+	return &Kafka{
+		Brokers: brokers,
+		Timeout: timeout,
+	}
+}
+
 func (k Kafka) createEventId() string {
 	return uuid.NewString()
 }
