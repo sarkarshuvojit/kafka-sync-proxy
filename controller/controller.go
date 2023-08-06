@@ -20,8 +20,8 @@ func HandleRest(c *fiber.Ctx) error {
 	}
 	log.Printf("Request: %v", request)
 
-	messagingProvider := &kafka.Kafka{Brokers: request.Brokers, Timeout: 5}
-	blockingService := &service.BlockingService{Provider: messagingProvider}
+	messagingProvider := kafka.NewKafka(request.Brokers, 5)
+	blockingService := service.NewBlockingService(messagingProvider)
 
 	payloadAsBytes, _ := json.Marshal(request.Payload)
 	headersAsBytes, _ := json.Marshal(request.Headers)
