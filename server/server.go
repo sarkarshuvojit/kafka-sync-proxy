@@ -11,7 +11,9 @@ func setupRoutes(app *fiber.App) {
 }
 
 func Start() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: "Kafka Sync Proxy",
+	})
 	setupRoutes(app)
 	app.Listen(":8420")
 }
