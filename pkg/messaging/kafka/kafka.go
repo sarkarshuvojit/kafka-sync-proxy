@@ -13,7 +13,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
-	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging"
 )
 
 type Kafka struct {

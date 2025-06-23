@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/sarkarshuvojit/kafka-sync-proxy/controller"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/internal/controller"
 )
 
 func setupRoutes(app *fiber.App) {
