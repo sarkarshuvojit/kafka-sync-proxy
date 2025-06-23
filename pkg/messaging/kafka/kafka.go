@@ -175,6 +175,8 @@ func (k Kafka) receive(
 
 }
 
+// SendAndReceive accepts request and reponse topic
+// Pushes a message in request topic and expects the response in the response topic with the same key
 func (k Kafka) SendAndReceive(
 	requestTopic string,
 	responseTopic string,
