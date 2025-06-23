@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/sarkarshuvojit/kafka-sync-proxy/messaging/kafka"
-	"github.com/sarkarshuvojit/kafka-sync-proxy/service"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging/kafka"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/service"
 )
 
 func main() {
