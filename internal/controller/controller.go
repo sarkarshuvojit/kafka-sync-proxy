@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -13,6 +14,8 @@ import (
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging/kafka"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/service"
 )
+
+var AppContext context.Context
 
 func getTimeout() int {
 	val := utils.GetEnvOr("KSP_TIMEOUT", "5")
@@ -37,6 +40,7 @@ func HandleRest(c *fiber.Ctx) error {
 	headersAsBytes, _ := json.Marshal(request.Headers)
 
 	res, err := blockingService.RequestResponseBlock(
+		AppContext,
 		request.RequestTopic,
 		request.ResponseTopic,
 		string(payloadAsBytes),

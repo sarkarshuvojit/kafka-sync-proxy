@@ -99,6 +99,7 @@ func (k Kafka) send(
 }
 
 func (k Kafka) receive(
+	ctx context.Context,
 	topic string,
 	coorelationId string,
 	timeoutInSeconds int,
@@ -117,7 +118,7 @@ func (k Kafka) receive(
 	}
 
 	ctxTimeout, cancel := context.WithTimeout(
-		context.Background(),
+		ctx,
 		time.Second*time.Duration(timeoutInSeconds),
 	)
 	defer cancel()
@@ -132,6 +133,7 @@ func (k Kafka) receive(
 			case err := <-consumer.Errors():
 				fmt.Println(err)
 				responseFoundErrCh <- err
+				return
 
 			case msg := <-consumer.Messages():
 				if string(msg.Key) == coorelationId {
@@ -148,6 +150,7 @@ func (k Kafka) receive(
 						Payload: msg.Value,
 						Headers: headersAsBytes,
 					}
+					return
 				}
 
 			case <-ctx.Done():
@@ -177,6 +180,7 @@ func (k Kafka) receive(
 // SendAndReceive accepts request and reponse topic
 // Pushes a message in request topic and expects the response in the response topic with the same key
 func (k Kafka) SendAndReceive(
+	ctx context.Context,
 	requestTopic string,
 	responseTopic string,
 	payload []byte,
@@ -190,7 +194,7 @@ func (k Kafka) SendAndReceive(
 		return nil, err
 	}
 
-	res, err := k.receive(responseTopic, coorelationId, k.Timeout)
+	res, err := k.receive(ctx, responseTopic, coorelationId, k.Timeout)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,7 @@
 package messaging
 
+import "context"
+
 // SendAndReceiveResponse defines a generic structure for the response recieved from the response topic
 type SendAndReceiveResponse struct {
 	Payload []byte
@@ -10,6 +12,7 @@ type SendAndReceiveResponse struct {
 // This provider can be used in future to implement for different message providers
 type MessagingProvider interface {
 	SendAndReceive(
+		ctx context.Context,
 		requestTopic string,
 		responseTopic string,
 		payload []byte,
