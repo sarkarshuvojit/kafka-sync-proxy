@@ -121,7 +121,10 @@ func (k Kafka) receive(
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutInSeconds))
+	ctxTimeout, cancel := context.WithTimeout(
+		context.Background(),
+		time.Second*time.Duration(timeoutInSeconds),
+	)
 	defer cancel()
 
 	// Get signal for finish
@@ -156,6 +159,7 @@ func (k Kafka) receive(
 				fmt.Println("Interrupt is detected")
 				consumer.Close()
 				responseFoundErrCh <- errors.New("Interruped")
+				return
 			}
 		}
 	}()

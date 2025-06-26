@@ -16,10 +16,9 @@ import (
 
 func getTimeout() int {
 	val := utils.GetEnvOr("KSP_TIMEOUT", "5")
-	if intval, err := strconv.Atoi(val); err != nil {
+	if intval, err := strconv.Atoi(val); err == nil {
 		return intval
 	}
-
 	return 5
 }
 
