@@ -6,9 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -69,6 +66,7 @@ func (k Kafka) send(
 		log.Printf("Error: %v\n", err)
 		return errors.New(fmt.Sprintf("Could not produce to %v", k.Brokers))
 	}
+	defer producer.Close()
 
 	var recordHeaders []sarama.RecordHeader
 	var headersMap map[string]string
@@ -118,9 +116,6 @@ func (k Kafka) receive(
 		return nil, err
 	}
 
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
-
 	ctxTimeout, cancel := context.WithTimeout(
 		context.Background(),
 		time.Second*time.Duration(timeoutInSeconds),
@@ -131,7 +126,7 @@ func (k Kafka) receive(
 	responseFoundCh := make(chan *messaging.SendAndReceiveResponse)
 	responseFoundErrCh := make(chan error)
 
-	go func() {
+	go func(ctx context.Context) {
 		for {
 			select {
 			case err := <-consumer.Errors():
@@ -155,14 +150,14 @@ func (k Kafka) receive(
 					}
 				}
 
-			case <-sigchan:
-				fmt.Println("Interrupt is detected")
+			case <-ctx.Done():
+				fmt.Println("Context cancelled")
 				consumer.Close()
-				responseFoundErrCh <- errors.New("Interruped")
+				responseFoundErrCh <- errors.New("Context cancelled")
 				return
 			}
 		}
-	}()
+	}(ctxTimeout)
 
 	select {
 	case <-ctxTimeout.Done():
