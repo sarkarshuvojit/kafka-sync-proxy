@@ -4,13 +4,23 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/internal/types"
+	"github.com/sarkarshuvojit/kafka-sync-proxy/internal/utils"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging/kafka"
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/service"
 )
+
+func getTimeout() int {
+	val := utils.GetEnvOr("KSP_TIMEOUT", "5")
+	if intval, err := strconv.Atoi(val); err == nil {
+		return intval
+	}
+	return 5
+}
 
 func HandleRest(c *fiber.Ctx) error {
 	request := new(types.BlockingRequestDto)
@@ -20,7 +30,7 @@ func HandleRest(c *fiber.Ctx) error {
 	}
 	log.Printf("Request: %v", request)
 
-	messagingProvider := kafka.NewKafkaProvider(request.Brokers, 5)
+	messagingProvider := kafka.NewKafkaProvider(request.Brokers, getTimeout())
 	blockingService := service.NewBlockingService(messagingProvider)
 
 	payloadAsBytes, _ := json.Marshal(request.Payload)
