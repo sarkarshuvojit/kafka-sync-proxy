@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"log"
 
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging"
@@ -21,6 +22,7 @@ func NewBlockingService(provider messaging.MessagingProvider) *BlockingService {
 // This function pushes the payload and headers to requestTopic,
 // and waits for a message in responseTopic with the same key.
 func (b BlockingService) RequestResponseBlock(
+	ctx context.Context,
 	requestTopic string,
 	responseTopic string,
 	payload string,
@@ -30,10 +32,12 @@ func (b BlockingService) RequestResponseBlock(
 	messagingProvider := b.Provider
 
 	msg, err := messagingProvider.SendAndReceive(
+		ctx,
 		requestTopic,
 		responseTopic,
 		[]byte(payload),
-		[]byte(headers))
+		[]byte(headers),
+	)
 
 	if err != nil {
 		log.Println("Error Receiving msg")

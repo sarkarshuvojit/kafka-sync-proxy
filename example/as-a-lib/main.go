@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sarkarshuvojit/kafka-sync-proxy/pkg/messaging/kafka"
@@ -19,7 +20,7 @@ func main() {
 	//
 	// By this we can achieve inter-service request reply pattern
 	// while using a very simple interface
-	response, err := service.RequestResponseBlock("create_user", "user_created", "{}", "{}")
+	response, err := service.RequestResponseBlock(context.TODO(), "create_user", "user_created", "{}", "{}")
 
 	if err != nil {
 		panic(err)
