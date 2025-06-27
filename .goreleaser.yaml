@@ -17,7 +17,7 @@ before:
 
 builds:
   - main: ./cmd/serve/main.go
-  - env:
+    env:
       - CGO_ENABLED=1
     goos:
       - linux
