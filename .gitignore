@@ -1,2 +1,4 @@
 .bin
 .tmp
+# Added by goreleaser init:
+dist/
